@@ -17,6 +17,16 @@ void testReadInteger(void) {
 	assert(n == 01234567);
 	assert(*str == '8');
 
+	str = "0";
+	n = readInteger(&str);
+	assert(n == 0);
+	assert(*str == 0);
+
+	str = "emm";
+	n = readInteger(&str);
+	assert(n == 0);
+	assert(*str == 'e');
+
 	printf("readInteger tests passed\n");
 }
 
