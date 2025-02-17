@@ -12,5 +12,10 @@ typedef  int16_t  int16;
 typedef  int32_t  int32;
 typedef  int64_t  int64;
 
+typedef uint8_t bool;
+
+// not really ints
+typedef double float64;
+typedef float  float32;
 
 #endif
