@@ -37,9 +37,114 @@
 // expression expression is never valid
 // op op is sometimes valid (e.g. !  !  expr)
 
+/*
+definition <typename> [<optional-indirection> 
+                       <undefined-identifier>
+					   <optional-assignment>] [1..n]
+
+the word function isn't written
+
+function <typename> <optional-indirection>
+                    <open-paren>
+                    <typename> <undefined-identifier>
+                    [<comma> <typename> <undefined-identifier>] [0..n]
+                    <close-paren> <open-brace> <statement>[0..n] <close-brace>
+
+
+*/
+
+#define TAB_WIDTH 8
+
+uint64 parse(uint8 *str) {
+	// in global scope, we are expecting
+	// a function definition
+	// a variable/constant definition
+	// assignment to a variable, with a valuable computable at compiletime
+	// a type definition
+	// an operator definition
+	// an enum definition
+
+	// we first cruise through in global scope, write down all the 
+	// str addresses of functions we need to compile
+	// we also define and evaluate global variables
+	// we also evaluate type definitions and enum constants
+	// we also note operator definitions and write down address for compile
+
+	// then once that pass is done, we use the global info to compile
+	// all the functions
+
+	// this could be two functions but they are so similar
+	// its a few added checks, major repetition avoided
+	// keeps the binary small too
+
+	// in the global pass, when we encounter a function def,
+	// after the parameter list, we only keep a bracket stack,
+	// and continue normally once its empty
+
+	// read symbol
+	// react to it
+	// wow
+	uint64 line = 0, col = 0;
+	// all these bools may end up as one or two uint64s eventually
+	uint8 emptyline = 1; // is the current line empty (besides whitespace)
+
+// this is how you make a while loop when you're dumb and don't like indents
+begin:
+	switch (*str) {
+		case '\t': // who cares about whitespace
+			col += TAB_WIDTH - 1;
+		case ' ':
+			col++;
+			str++;
+			break;
+		case '\n':
+			line++;
+			col = 0;
+			emptyline = 1;
+			break;
+
+		case '/':
+			str++;
+			if (*str == '/') {        // line comment
+				do str++;
+				while (*str != '\n' && *str != '\0');
+				line++;
+			} else if (*str == '*') { /* block comment */
+				do {
+					str++;
+					col++;
+					if (*str == '\n') { // I really hate this
+						line++;
+						col = 0;
+						emptyline = 1;
+					}
+				} while (!(*str == '*' && str[1] == '/') && *str != '\0');
+			} else {
+				// parse operator
+			}
+			break;
+		
+		case '<':
+			break;
+
+
+		case '\0':
+			goto done;
+	}
+	
+	goto begin;
+
+done:
+	return 0;
+}
+
+
 uint64 parseSource(uint8 *str) {
 	// we need a string table. store str8s, sign-bit marks string-table index
 	// we need a bracket stack
+
+	// scope stack stores valid symbols at current scope
+	// encoded as top of sym stack
 
 	// if you think 32 is dumb just wait till I get a xeon	
 	uint8 *identifier = aligned_alloc(32, MAX_IDENTIFIER_LEN);
@@ -48,16 +153,18 @@ uint64 parseSource(uint8 *str) {
 		return ~0ull;
 	}
 
+	// expression tree
+
 	while (1) {
 		// what symbol is under the tape head?
-		switch (*str) { // switch bitch
+		switch (*str) { 
 			case '0': case '1': case '2': case '3': case '4':
 			case '5': case '6': case '7': case '8': case '9':
 				//uint64 n = readInteger(&str);
 				if (*str == '.') {
 					// respond to floating point
 				}
-
+				
 				break;
 			case 'A': case 'B': case 'C': case 'D': case 'E':
 			case 'F': case 'G': case 'H': case 'I': case 'J':
