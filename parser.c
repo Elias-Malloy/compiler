@@ -85,6 +85,8 @@ uint64 parse(uint8 *str) {
 	// react to it
 	// wow
 	uint64 line = 0, col = 0;
+	uint64 n;
+	float64 f;
 	// all these bools may end up as one or two uint64s eventually
 	uint8 emptyline = 1; // is the current line empty (besides whitespace)
 
@@ -127,6 +129,18 @@ begin:
 		case '<':
 			break;
 
+		case '0': case '1': case '2': case '3': case '4':
+		case '5': case '6': case '7': case '8': case '9':
+			n = readInteger(&str);
+			if (*str == '.') {
+				f = readFloat(&str);
+				f += (float64) n;
+				// add float constant to stream
+			} else {
+				// add integer constant to stream
+			}
+
+			break;
 
 		case '\0':
 			goto done;
