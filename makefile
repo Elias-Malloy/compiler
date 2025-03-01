@@ -2,7 +2,7 @@
 flags = -Wno-pointer-sign -Wno-incompatible-pointer-types
 
 
-all: main.o tests.o parser.o
+all: main.o tests.o parser.o search.o
 	cc -o bin $^
 
 main.o: main.c
@@ -13,6 +13,9 @@ tests.o: tests.c
 
 parser.o: parser.c
 	cc -c parser.c $(flags) 
+
+search.o: search.c
+	cc -c search.c
 
 clean:
 	rm -rf *.o bin
