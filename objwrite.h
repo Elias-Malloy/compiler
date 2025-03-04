@@ -16,6 +16,7 @@ typedef struct ObjectFile {
 	uint64 uninitializedDataSize;
 	uint64 *readonlyData;
 	uint64 readonlyDataSize;
+	bool gnu; // kinda temporary
 } ObjectFile;
 
 uint32 writeElf64(ObjectFile *obj);

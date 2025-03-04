@@ -10,7 +10,8 @@ uint32 writeElf64(ObjectFile *obj) {
 	uint32 numSections = 2 + (obj->codeSize && obj->code) + 
 		(obj->initializedDataSize && obj->initializedData) + 
 		(!!obj->uninitializedDataSize) + 
-		(obj->readonlyDataSize && obj->readonlyData); 
+		(obj->readonlyDataSize && obj->readonlyData) +
+		(!!obj->gnu); 
 		
 	// set all fields in header to zero by default
 	Elf64_Ehdr header = { 0 };
@@ -88,6 +89,15 @@ uint32 writeElf64(ObjectFile *obj) {
 		strcpy(sectionNames + sectionNamesLen, ".rodata");
 		sectionNamesLen += 8;
 		offset += obj->readonlyDataSize;
+		i++;
+	}
+
+	if (obj->gnu) { // TODO figure this out for real
+		sectionHeaders[i].sh_name = sectionNamesLen;
+		sectionHeaders[i].sh_type = SHT_PROGBITS;
+		sectionHeaders[i].sh_addralign = 1;
+		strcpy(sectionNames + sectionNamesLen, ".note.GNU-stack");
+		sectionNamesLen += 16;
 		i++;
 	}
 
