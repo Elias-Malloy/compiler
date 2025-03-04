@@ -1,14 +1,25 @@
 #ifndef SYMBOLTABLE_H
 #define SYMBOLTABLE_H
 
+#include "intdef.h"
+
 /* EMM */
 
 typedef enum SymbolType {
 	NONE=0,
-	TYPE_DEFINITION,
-	VARIABLE,
-	CONSTANT,
-	LITERAL,
+	SYM_TYPE_NAME,
+	SYM_TYPE_MODIFIER,
+	SYM_VARIABLE,
+	SYM_CONSTANT,
+	SYM_FUNCTION, // may be redundant with variable but we'll see
+	SYM_KEYWORD_IF,
+	SYM_KEYWORD_ELSE,
+	SYM_KEYWORD_FOR,
+	SYM_KEYWORD_WHILE,
+	SYM_KEYWORD_BREAK,
+	SYM_KEYWORD_CONTINUE,
+	SYM_KEYWORD_RETURN,
+	SYM_KEYWORD_SIZEOF,
 } SymbolType;
 
 typedef struct Symbol {
@@ -26,9 +37,11 @@ typedef struct Symbol {
 typedef struct SymbolTable {	
 	Symbol *symbols;
 	uint32 *lookup;
+	uint8 *stringTable;
+	uint32 symbolCapacity;
 	uint32 symbolCount;
 	uint32 tableSize;
-	uint8 *stringTable;
+	uint32 stringTableTop;
 	uint32 stringTableSize;
 } SymbolTable;
 
@@ -36,7 +49,10 @@ typedef struct SymbolTable {
 //uint32 deleteLookupEntry(SymbolTable *symtab, uint32 symbolIndex);
 uint32 lookupSymbolIndex(SymbolTable *symtab, uint8 *name);
 uint32 addSymbol(SymbolTable *symtab, uint8 *name, SymbolType type, uint32 dataIndex);
-uint8 *getSymbolName(SymbolTable *symtab, uint32 symbolIndex) {
+uint8 *getSymbolName(SymbolTable *symtab, uint32 symbolIndex);
 uint32 hashsdbm(uint8 *str);
+uint32 printSymbolTable(SymbolTable *symtab);
+bool createSymbolTable(SymbolTable *symtab);
+void freeSymbolTable(SymbolTable *symtab);
 
 #endif
