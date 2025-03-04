@@ -14,6 +14,9 @@ typedef  int64_t  int64;
 
 typedef uint8_t bool;
 
+#define true  (bool)1
+#define false (bool)0
+
 // not really ints
 typedef double float64;
 typedef float  float32;
