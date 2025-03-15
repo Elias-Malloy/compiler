@@ -33,4 +33,24 @@ typedef struct Symbol { // 16 bytes
 	};
 } Symbol;
 
+typedef struct SymbolTable {	
+	Symbol *symbols;
+	uint32 *lookup;
+	uint8 *stringTable;
+	uint32 symbolCapacity;
+	uint32 symbolCount;
+	uint32 tableSize;
+	uint32 stringTableTop;
+	uint32 stringTableSize;
+} SymbolTable;
+
+//uint32 deleteLookupEntry(SymbolTable *symtab, uint32 symbolIndex);
+uint32 lookupSymbolIndex(SymbolTable *symtab, uint8 *name);
+uint32 addSymbol(SymbolTable *symtab, uint8 *name, SymbolType type, uint32 dataIndex);
+uint8 *getSymbolName(SymbolTable *symtab, uint32 symbolIndex);
+uint32 hashsdbm(uint8 *str);
+uint32 printSymbolTable(SymbolTable *symtab);
+bool createSymbolTable(SymbolTable *symtab);
+void freeSymbolTable(SymbolTable *symtab);
+
 #endif
