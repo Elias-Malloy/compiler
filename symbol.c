@@ -50,6 +50,7 @@ uint32 lookupSymbolIndex(SymbolTable *symtab, uint8 *name) {
 	uint32 end = symtab->tableSize;
 	for (; ind < end; ind++) { // linear probing
 		if (symtab->lookup[ind] == TOMBSTONE) continue; // skip past tomb stones
+		if (symtab->lookup[ind] == 0) break; // empty spot implies not defined
 		uint8 *existingName = getSymbolName(symtab, ind);
 		if (strcmp(existingName, name) == 0) {
 			return symtab->lookup[ind];
@@ -60,13 +61,21 @@ uint32 lookupSymbolIndex(SymbolTable *symtab, uint8 *name) {
 
 uint32 addSymbol(SymbolTable *symtab, uint8 *name, SymbolType type, uint32 dataIndex) {
 	uint32 symbolIndex = lookupSymbolIndex(symtab, name);
-	if (symbolIndex != 0) { // already entry for name
+	// skip past tombstones
+	for (; symbolIndex != 0 && symbolIndex < symtab->tableSize; symbolIndex++) {
+		if (symtab->lookup[symbolIndex] == TOMBSTONE) continue;
+		
 		uint8 *existingName = getSymbolName(symtab, symbolIndex);
 		if (strcmp(existingName, name) == 0) {
-			return 1;
+			return 1; // error, symbol already defined
 		}
-		// this is the weirdo case where two strings hashed to the same thing	
-		
+		// here we quietly skip the case where two strings happened to hash to the same index
+		// it isn't ignored, just handled implicitly in how symbols are lookup up
+	}
+	// there is no space for the symbol
+	if (symbolIndex == symtab->tableSize) {
+		// rehash
+		// recur
 	}
 	
 	return 0;

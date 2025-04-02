@@ -3,65 +3,72 @@
 
 #include "intdef.h"
 #include "symbol.h"
+#include "operator.h"
 
 typedef struct Tree {
-	uint8  context;
-	uint8  type;
-	uint16 branchCount; 
-	uint32 offset;
+	uint16 type;		// identifier for node type
+	uint16 branchCount; // length of branches array
+	uint32 location;    // location within source code
+	Tree *branches[1];   // possibly overallocated array of branches
 } Tree;
 
-typedef struct TreeRoot {
-	Tree *data; // where tree entries are stored
-	uint32 top; // index into data, where new entries may go
-	uint32 capacity; // limit of entries that can be made into data, before resizing
-} TreeRoot;
-
-// language notes
-
-// there is nothing special about an initializer value such as with c array initializers
-
-// statement -> compound statement(8*statement(empty to mark end, ext to mark continueation))
-// statement -> if (expression, statement, optional-statement(else clause))
-// statement -> for (expression(decl permitting), condition, expression)
-// statement -> expression
-// statement -> decl-expression 2-branch base-type decl-triplet or comma(decl-triplet, decl-tiplet)
-// decl-triplet 3-branch optional-indirection name optional-expression(assigned-value)
-
-// expression -> constant
-// expression -> variable
-// expression -> binary-op(expression, expression)
-// expression -> unary-op(expression)
-
-// if operator expression, the operator is encoded in the node, branches are operands, the op holds post/pre info
-// at the tree level, operator precedence has already been resolved
-// op comma must be an op for within decl
-// 
-
-
 enum TreeNodeType {
-	TREE_EMPTY = 0, // sentinal marker for end of entry
-	TREE_BRANCH_EXT, // sentinal to mark n additional branches at the current node, found at offset
+	// unary operators branch 0 is operand expr
+	TREE_OP_POST_INC,
+	TREE_OP_POST_DEC,
+	TREE_OP_FUNCTION_CALL,
+	TREE_OP_SUBSCRIPT,
+	TREE_OP_DIRECT_MEMBER_ACCESS,
+	TREE_OP_INDIRECT_MEMBER_ACCESS,
+	TREE_OP_PRE_INC,
+	TREE_OP_PRE_DEC,
+	TREE_OP_POSITIVE,
+	TREE_OP_NEGATIVE,
+	TREE_OP_LOGICAL_NOT,
+	TREE_OP_COMPLEMENT,
+	TREE_OP_REF,
+	TREE_OP_DEREF,
+	TREE_OP_SIZEOF,
+	TREE_OP_ALIGNOF,
+	// binary operators branch 0,1 are operand exprs
+	TREE_OP_MUL,
+	TREE_OP_DIV,
+	TREE_OP_MOD,
+	TREE_OP_ADD,
+	TREE_OP_SUB,
+	TREE_OP_LSHIFT,
+	TREE_OP_RSHIFT,
+	TREE_OP_CMP_L,
+	TREE_OP_CMP_G,
+	TREE_OP_CMP_LE,
+	TREE_OP_CMP_GE,
+	TREE_OP_CMP_EQ,
+	TREE_OP_CMP_NEQ,
+	TREE_OP_AND,
+	TREE_OP_XOR,
+	TREE_OP_OR,
+	TREE_OP_LOGICAL_AND,
+	TREE_OP_LOGICAL_OR,
+	TREE_OP_ASSIGN,
+	TREE_OP_COMMA,
+	TREE_NOP,
 
-	TREE_EXPR_BIT = 0x40, // general expression //
-
-	TREE_EXPR_OP_POST_INC = TREE_EXPR_BIT | OP_POST_INC,
-	TREE_EXPR_OP_PRE_INC = TREE_EXPR_BIT | OP_PRE_INC,
-	TREE_EXPR_OP_ADD = TREE_EXPR_BIT | OP_ADD,
-
-	TREE_EXPR_OP_COMMA = TREE_EXPR_BIT | OP_COMMA,
+	TREE_VALUE, // branch 0 is type, branch 1 is location, branch 2 is value-ptr of immediate if relevent
 	
-	TREE_EXPR_VARIABLE = TREE_EXPR_BIT | OPERATOR_COUNT, // place after all operators
+	TREE_TYPE_BUILT_IN, // branch 0 is an integer contant identifying the built in
+	TREE_TYPE_POINTER, // branch 0 points to a type tree
+	TREE_TYPE_ARRAY, // branch 0 points to a type tree, branch 1 is an integer size of array
+	TREE_TYPE_STRUCT, // branches are decls for fields
+	TREE_DECL, // branch 0 points to a type tree, branch 1 is a pointer to a string name
 
-	TREE_STMT = 0x80, // general statement
-	TREE_STMT_COMPOUND = TREE_STMT | 1, // offset marks the start of a TREE_EMPTY terminated sequence of statements
+	TREE_STMTS,
+	TREE_STMT_IF,
+	TREE_STMT_FOR,
+	TREE_STMT_WHILE,
+	TREE_STMT_RETURN,
+};
 
-	TREE_STMT_IF = TREE_STMT | 2, // 3-branch, expr(condition) statement(body) statement(else clause, TREE_EMPTY to omit)
-	TREE_STMT_FOR = TREE_STMT | 3, // 4-branch expr(decl-allowed) expr(condition) expr(increment) statement(body)
-	TREE_STMT_WHILE = TREE_STMT | 4, // 2-branch expr(condition) statement(body)
-}
-
-// assignment -> (lvalue, expression)
+uint32 typecheckTree(Tree *t)
 
 // returns true if t represents an expression tree which
 // evaluates to an assignable value

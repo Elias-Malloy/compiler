@@ -53,7 +53,113 @@ function <typename> <optional-indirection>
 
 */
 
-#define TAB_WIDTH 8
+uint64 parseSource(uint8 *s, TreeRoot *root, SymbolTable *symbolTable, LineTable *lineTable) {
+	if (s == NULL) return 1;
+
+	if (functionIndexTable == NULL) return 1;
+
+	LineTable *lineTable = malloc(8 + 256 * 4);
+
+	globalPrePass(s, root, symbolTable, lineTable, functionIndexTable);
+	for (uint32 i = 0; i < functionIndexTable->count, i++) {
+		uint32 start = functionIndexTable->indices[i].start;
+		uint32 end   = functionIndexTable->indices[i].end;
+		// update index table with starting node offset of function tree
+		functionIndexTable->indices[i].start = root->top;
+		// fill out tree and symbol table with funciton information
+		parseFunction(s, start, end, root, symbolTable, lineTable);
+		// update index table with ending node offset of function tree
+		functionIndexTable->indices[i].end = root->top;
+	}
+	// next compile all the functions based on tree and symbol table
+	free(lineTable);
+	free(functionIndexTable);
+	return 0;
+}
+
+uint64 parseFunction(const uint8 *s, const uint32 start, const uint32 end, TreeRoot *root, 
+	SymbolTable *symbolTable, const LineTable *lineTable) {
+	uint8 *identfier = malloc(MAX_IDENTIFIER_LEN);
+	if (identifier == NULL) { // error out of memory
+		return 1;
+	}
+	vec32 *branchStack = vec32Create(256);
+	if (branchStack == NULL) {
+		return 1; // e out of mem
+	}
+	
+
+	uint32 j;
+	uint8 c;
+
+	for (uint32 i = start; i < end; i++) {
+		switch (s[i]) {
+			case '0': case '1': case '2': case '3': case '4':
+			case '5': case '6': case '7': case '8': case '9':
+				// read integer
+				break;
+			
+			case 'A': case 'B': case 'C': case 'D': case 'E':
+			case 'F': case 'G': case 'H': case 'I': case 'J':
+			case 'K': case 'L': case 'M': case 'N': case 'O':
+			case 'P': case 'Q': case 'R': case 'S': case 'T':
+			case 'U': case 'V': case 'W': case 'X': case 'Y': case 'Z':
+			case 'a': case 'b': case 'c': case 'd': case 'e':
+			case 'f': case 'g': case 'h': case 'i': case 'j':
+			case 'k': case 'l': case 'm': case 'n': case 'o':
+			case 'p': case 'q': case 'r': case 's': case 't':
+			case 'u': case 'v': case 'w': case 'x': case 'y': case 'z':
+			case '_':
+				// copy the name into identifier
+				j = 0;
+				do {
+					c = s[i + j];
+					identifier[j++] = c;
+				} while (isalnum(c) || c == '_');
+				i += j - 1; // minus 1 because i will be incremented at end of loop
+				uint32 symIdx = lookupSymbolIndex(symbolTable, identifier);
+				if (symIdx == 0) {
+					printf("Undeclared identifier: \'%s\'\n", identifier);
+				}
+
+				break;
+			case '/':
+				if (s[i + 1] == '/') { // TODO add check for mid-string-literal
+					while(i < end && s[i] != '\n') i++; // skip rest of line 
+					break; // exit switch
+				} else if (s[i + 1] == '*') {
+					i += 2; // TODO add stack to support nested block comments
+					while (i < end && !(s[i] == '*' && s[i + 1] == '/')) i++;
+					break; // exit switch
+				}
+				// otherwise we have OP_DIV
+				// check symbol 
+				if (currentBranch.type & TREE_EXPR_BIT == 0) {
+					printf("Error expected first operand to division\n");
+				}
+			case '*':
+				// TODO consider deref opp
+				// TODO consider mark of indirection in declaration
+				
+				// we have OP_MUL
+				
+			case '(':
+
+				break;
+
+			default:
+				printf("Unrecognized symbol (%c) at %u\n", s[i], i);
+		}
+	}
+	free(identifier);
+	vec32Free(branchStack);
+
+	return 0;
+}
+
+
+// OLD CODE BELOW
+/*
 
 uint64 parse(uint8 *str) {
 	// in global scope, we are expecting
@@ -111,7 +217,7 @@ begin:
 				do str++;
 				while (*str != '\n' && *str != '\0');
 				line++;
-			} else if (*str == '*') { /* block comment */
+			} else if (*str == '*') {
 				do {
 					str++;
 					col++;
@@ -160,7 +266,6 @@ uint64 parseSource(uint8 *str) {
 	// scope stack stores valid symbols at current scope
 	// encoded as top of sym stack
 
-	// if you think 32 is dumb just wait till I get a xeon	
 	uint8 *identifier = aligned_alloc(32, MAX_IDENTIFIER_LEN);
 	if (identifier == NULL) {
 		printf("Error out of memory\n");
@@ -170,7 +275,6 @@ uint64 parseSource(uint8 *str) {
 	// expression tree
 
 	while (1) {
-		// what symbol is under the tape head?
 		switch (*str) { 
 			case '0': case '1': case '2': case '3': case '4':
 			case '5': case '6': case '7': case '8': case '9':
@@ -296,3 +400,4 @@ uint64 readIdentifier(uint8 **buf, uint8 *dst) {
 	dst[i] = '\0';
 	return i;
 }
+*/
